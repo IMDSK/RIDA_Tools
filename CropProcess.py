@@ -7,13 +7,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def crop_and_show_images(base_path, shp_directory, image_folder, result_folder):
-    rstPath = os.path.join(base_path, result_folder)
-    if not os.path.exists(rstPath):
-        os.makedirs(rstPath)
+    result_base_path = os.path.join(base_path, result_folder)
+    if not os.path.exists(result_base_path):
+        os.makedirs(result_base_path)
 
     for shp_file in os.listdir(shp_directory):
         if shp_file.endswith('.shp'):
             shp_path = os.path.join(shp_directory, shp_file)
+            area_name = os.path.basename(shp_path).replace('.shp', '')
+            area_result_path = os.path.join(result_base_path, area_name)
+            if not os.path.exists(area_result_path):
+                os.makedirs(area_result_path)
+
             with fiona.open(shp_path, "r") as shapefile:
                 aoiGeom = [feature["geometry"] for feature in shapefile]
                 bandPath = os.path.join(base_path, image_folder)
@@ -24,7 +29,7 @@ def crop_and_show_images(base_path, shp_directory, image_folder, result_folder):
                 chosen_raster_path = os.path.join(bandPath, chosen_image_name)
                 chosen_raster = rasterio.open(chosen_raster_path)
 
-                fig, ax = plt.subplots(figsize=(4, 4),dpi= 72)
+                fig, ax = plt.subplots(figsize=(4, 4), dpi=72)
                 show(chosen_raster, cmap='Blues', ax=ax)
 
                 for bandName in bandNames:
@@ -39,8 +44,8 @@ def crop_and_show_images(base_path, shp_directory, image_folder, result_folder):
                             "transform": out_transform
                         })
 
-                        cropped_image_name = f"{shp_file.replace('.shp', '')}_{bandName}"
-                        cropped_image_path = os.path.join(rstPath, cropped_image_name)
+                        cropped_image_name = bandName  # Use the original filename
+                        cropped_image_path = os.path.join(area_result_path, cropped_image_name)
                         with rasterio.open(cropped_image_path, "w", **out_meta) as dest:
                             dest.write(out_image)
 
@@ -52,4 +57,5 @@ def crop_and_show_images(base_path, shp_directory, image_folder, result_folder):
                 ax.set_xlim(chosen_raster.bounds.left, chosen_raster.bounds.right)
                 plt.show()
 
-                print(f"Cropped images saved for {shp_file} in the '{image_folder}' folder.")
+                print(f"Cropped images saved for {shp_file} in the '{area_name}' folder within '{result_folder}'.")
+
