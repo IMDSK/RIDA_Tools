@@ -24,13 +24,7 @@ def crop_and_show_images(base_path, shp_directory, image_folder, result_folder):
                 bandPath = os.path.join(base_path, image_folder)
                 bandNames = [name for name in os.listdir(bandPath) if name.endswith('.jp2')]
 
-                # Randomly pick one image to plot from the set
-                chosen_image_name = np.random.choice(bandNames)
-                chosen_raster_path = os.path.join(bandPath, chosen_image_name)
-                chosen_raster = rasterio.open(chosen_raster_path)
-
                 fig, ax = plt.subplots(figsize=(4, 4), dpi=72)
-                show(chosen_raster, cmap='Blues', ax=ax)
 
                 for bandName in bandNames:
                     rasterPath = os.path.join(bandPath, bandName)
@@ -44,18 +38,17 @@ def crop_and_show_images(base_path, shp_directory, image_folder, result_folder):
                             "transform": out_transform
                         })
 
-                        cropped_image_name = bandName  # Use the original filename
-                        cropped_image_path = os.path.join(area_result_path, cropped_image_name)
+                        cropped_image_path = os.path.join(area_result_path, bandName)
                         with rasterio.open(cropped_image_path, "w", **out_meta) as dest:
                             dest.write(out_image)
+                            print(f"Cropped image saved to: {cropped_image_path}")
 
-                        # Plot the cropped image on top of the original image
-                        with rasterio.open(cropped_image_path) as cropped_image:
-                            show(cropped_image, cmap='viridis', ax=ax, alpha=0.5)
+                        # Randomly select one image to plot
+                        if np.random.rand() < 1 / len(bandNames):
+                            chosen_raster = rasterio.open(cropped_image_path)
+                            show(chosen_raster, cmap='Blues', ax=ax)
 
-                ax.set_ylim(chosen_raster.bounds.bottom, chosen_raster.bounds.top)
-                ax.set_xlim(chosen_raster.bounds.left, chosen_raster.bounds.right)
+                ax.set_title(f"Area: {area_name}")
                 plt.show()
 
                 print(f"Cropped images saved for {shp_file} in the '{area_name}' folder within '{result_folder}'.")
-
