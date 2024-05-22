@@ -1,14 +1,18 @@
+
 import os
 import shutil
 
+Image = "/Users/imdsk/RIDA_Tools/Sentinel_Process/Image"
+Image_Pre = "/Users/imdsk/RIDA_Tools/Sentinel_Process/Image_Pre"
+
 def move_folders(base_path):
-    image_pre_path = os.path.join(base_path, "Image_Pre")
-    image_path = os.path.join(base_path, "Image")
+    image_pre_path = os.path.join(base_path, Image_Pre)
+    image_path = os.path.join(base_path, Image )
     if not os.path.exists(image_pre_path):
         os.makedirs(image_pre_path)
     if not os.path.exists(image_path):
         os.makedirs(image_path)
-    
+
     before_cropped_path = os.path.join(base_path, "Before_Cropped")
     after_cropped_path = os.path.join(base_path, "After_Cropped")
 

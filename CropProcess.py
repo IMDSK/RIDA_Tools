@@ -21,34 +21,39 @@ def crop_and_show_images(base_path, shp_directory, image_folder, result_folder):
 
             with fiona.open(shp_path, "r") as shapefile:
                 aoiGeom = [feature["geometry"] for feature in shapefile]
-                bandPath = os.path.join(base_path, image_folder)
-                bandNames = [name for name in os.listdir(bandPath) if name.endswith('.jp2')]
 
-                fig, ax = plt.subplots(figsize=(4, 4), dpi=72)
+            bandPath = os.path.join(base_path, image_folder)
+            bandNames = [name for name in os.listdir(bandPath) if name.endswith('.jp2')]
 
-                for bandName in bandNames:
-                    rasterPath = os.path.join(bandPath, bandName)
-                    with rasterio.open(rasterPath) as src:
-                        out_image, out_transform = mask(src, aoiGeom, crop=True)
-                        out_meta = src.meta.copy()
-                        out_meta.update({
-                            "driver": "JP2OpenJPEG",
-                            "height": out_image.shape[1],
-                            "width": out_image.shape[2],
-                            "transform": out_transform
-                        })
+            fig, ax = plt.subplots(figsize=(4, 4), dpi=72)
 
-                        cropped_image_path = os.path.join(area_result_path, bandName)
-                        with rasterio.open(cropped_image_path, "w", **out_meta) as dest:
-                            dest.write(out_image)
-                            print(f"Cropped image saved to: {cropped_image_path}")
+            for bandName in bandNames:
+                rasterPath = os.path.join(bandPath, bandName)
+                with rasterio.open(rasterPath) as src:
+                    out_image, out_transform = mask(src, aoiGeom, crop=True)
+                    out_meta = src.meta.copy()
+                    out_meta.update({"driver": "JP2OpenJPEG", "height": out_image.shape[1], "width": out_image.shape[2], "transform": out_transform})
 
-                        # Randomly select one image to plot
-                        if np.random.rand() < 1 / len(bandNames):
-                            chosen_raster = rasterio.open(cropped_image_path)
-                            show(chosen_raster, cmap='Blues', ax=ax)
+                    # Modify the file name pattern based on the result folder
+                    if result_folder == 'Before_Cropped':
+                        new_file_name = f"{bandName[:6]}_{bandName.split('_')[2]}.jp2"
+                    elif result_folder == 'After_Cropped':
+                        new_file_name = f"{bandName[:21]}_{bandName.split('_')[2]}.jp2"
+                    else:
+                        new_file_name = bandName
 
-                ax.set_title(f"Area: {area_name}")
-                plt.show()
+                    cropped_image_path = os.path.join(area_result_path, new_file_name)
 
-                print(f"Cropped images saved for {shp_file} in the '{area_name}' folder within '{result_folder}'.")
+                    with rasterio.open(cropped_image_path, "w", **out_meta) as dest:
+                        dest.write(out_image)
+
+                    print(f"Cropped image saved to: {cropped_image_path}")
+
+                    # Randomly select one image to plot
+                    if np.random.rand() < 1 / len(bandNames):
+                        chosen_raster = rasterio.open(cropped_image_path)
+                        show(chosen_raster, cmap='Blues', ax=ax)
+                        ax.set_title(f"Area: {area_name}")
+                        plt.show()
+
+            print(f"Cropped images saved for {shp_file} in the '{area_name}' folder within '{result_folder}'.")

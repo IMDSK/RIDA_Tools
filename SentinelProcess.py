@@ -1,20 +1,28 @@
 import os
 import shutil
+import time
+from threading import Timer
+from time import gmtime, strftime
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 from skimage import measure
 import rasterio
 from rasterio.transform import from_origin
 from rasterio.enums import Resampling
-from rasterio.warp import transform
 import geopandas as gpd
-from threading import Timer
-import time
+from rasterio.features import shapes
+from shapely.geometry import shape
+from xml.etree import ElementTree as ET
+import math
+from rasterio.warp import transform
+from osgeo import gdal
 import warnings
+import csv
 warnings.filterwarnings(action='ignore')
 
-# Global variables:
 systemCooldown = 2
 Error_Limit = 1
 mode = True
@@ -29,7 +37,7 @@ Rtbcon = os.path.join(Drive, "Raster_BurnCon/")
 Rtbreg = os.path.join(Drive, "Raster_BurnReg/")
 RtbShape = os.path.join(Drive, "Raster_BurnShape/")
 RtbLevel = os.path.join(Drive, "Raster_BurnLevel/")
-
+Track_arr = ["Area1/","Area2/"]
 
 def loadCooldown():
     global mode
@@ -64,12 +72,14 @@ def write_to_csv(data, file_name_csv):
             for row in data_list:
                 csv_writer.writerow(row)
         print(f"Data successfully written to {file_name_csv}")
+
     except Exception as e:
         print(f"Error writing to CSV file: {e}")
 
 def save_results_to_csv(data_arrays, csv_filenames, window_size, track):
     output_dir = f"output_data/{track}"
     os.makedirs(output_dir, exist_ok=True)
+
     for data, filename in zip(data_arrays, csv_filenames):
         full_path = os.path.join(output_dir, filename)
         np.savetxt(full_path, data, delimiter=',')
@@ -79,7 +89,7 @@ def print_with_tag(data, tag):
     print(tag)
     print(data)
     print("------")
-
+    
 def resample_raster(input_raster, output_raster, new_resolution):
     with rasterio.open(input_raster) as src:
         transform = src.transform
@@ -93,6 +103,7 @@ def resample_raster(input_raster, output_raster, new_resolution):
         )
         profile = src.profile
         profile.update(transform=transform, width=data.shape[2], height=data.shape[1])
+
         with rasterio.open(output_raster, 'w', **profile) as dst:
             dst.write(data)
 
@@ -111,12 +122,12 @@ def save_as_geotiff(data, output_path, resolution=10):
         'tiled': True,
         'interleave': 'band',
     }
+
     with rasterio.open(output_path, 'w', **profile) as dst:
         dst.write(data.astype('uint8'), 1)
 
 def Raster_Process(Track):
     global mode, Image, Image_Pre, Image_Finish, Image_Missing, Output, Error_Limit
-
     Loop_Limit = 0
     image_track = os.path.join(Image, Track)
     output_track = os.path.join(Output, Track)
@@ -126,14 +137,13 @@ def Raster_Process(Track):
         if Loop_Limit > 0:
             mode = True
             return
-
         Full_name = os.path.splitext(raster)[0]
-        Mid_name = Full_name[:23]
+        Mid_name = Full_name[:22]
         Short_name = Full_name[:6]
 
         BFB02 = os.path.join(Image_Pre, Track, f"{Short_name}_B02.jp2")
         BFB03 = os.path.join(Image_Pre, Track, f"{Short_name}_B03.jp2")
-        BFB04 = os.path.join(Image_Pre, Track, f"{Short_name}_B08.jp2")
+        BFB04 = os.path.join(Image_Pre, Track, f"{Short_name}_B04.jp2")
         BFB08 = os.path.join(Image_Pre, Track, f"{Short_name}_B08.jp2")
         BFB12 = os.path.join(Image_Pre, Track, f"{Short_name}_B12.jp2")
         BFB1210 = os.path.join(Image_Pre, Track, f"{Short_name}_B1210.jp2")
@@ -160,7 +170,7 @@ def Raster_Process(Track):
         print(BFB12)
 
         if all(
-            [ 
+            [
                 os.path.exists(BFB02),os.path.exists(BFB03),os.path.exists(BFB04),os.path.exists(BFB08), os.path.exists(BFB12),
                 os.path.exists(AFB02),os.path.exists(AFB03), os.path.exists(AFB04),os.path.exists(AFB05),os.path.exists(AFB06),os.path.exists(AFB07),os.path.exists(AFB8A),os.path.exists(AFB08), os.path.exists(AFB09), os.path.exists(AFB12)
             ]
@@ -195,6 +205,7 @@ def Raster_Process(Track):
                     )
                     profile = src.profile
                     profile.update(transform=transform, width=data.shape[2], height=data.shape[1])
+
                     with rasterio.open(output_raster, 'w', **profile) as dst:
                         dst.write(data)
 
@@ -213,67 +224,113 @@ def Raster_Process(Track):
                     'tiled': True,
                     'interleave': 'band',
                 }
+
                 with rasterio.open(output_path, 'w', **profile) as dst:
                     dst.write(data.astype('uint8'), 1)
 
-            if not os.path.exists(BFB1210):
+            if os.path.exists(BFB1210) == False:
                 print(print_time() + "Raster_Process :: Resample " + Short_name)
-                resample_raster(BFB12, BFB1210, 10)
+                input_raster = BFB12
+                output_raster = BFB1210
+                new_resolution = 10
+                resample_raster(input_raster, output_raster, new_resolution)
             
-            if not os.path.exists(AFB0510):
-                print(print_time() + "Raster_Process :: Resample " + Short_name + "B05")
-                resample_raster(AFB05, AFB0510, 10)
+            if os.path.exists(AFB0510) == False:
+                print(print_time() + "Raster_Process :: Resample " + Short_name+ "B05")
+                input_raster = AFB05
+                output_raster = AFB0510
+                new_resolution = 10
+                resample_raster(input_raster, output_raster, new_resolution)
 
-            if not os.path.exists(AFB0610):
+            if os.path.exists(AFB0610) == False:
                 print(print_time() + "Raster_Process :: Resample " + Short_name + "B06")
-                resample_raster(AFB06, AFB0610, 10)
+                input_raster = AFB06
+                output_raster = AFB0610
+                new_resolution = 10
+                resample_raster(input_raster, output_raster, new_resolution)
             
-            if not os.path.exists(AFB0710):
+            if os.path.exists(AFB0710) == False:
                 print(print_time() + "Raster_Process :: Resample " + Short_name + "B07")
-                resample_raster(AFB07, AFB0710, 10)
+                input_raster = AFB07
+                output_raster = AFB0710
+                new_resolution = 10
+                resample_raster(input_raster, output_raster, new_resolution)
 
-            if not os.path.exists(AFB0810):
+            if os.path.exists(AFB08) == False:
                 print(print_time() + "Raster_Process :: Resample " + Short_name + "B08")
-                resample_raster(AFB08, AFB0810, 10)
+                input_raster = AFB08
+                output_raster = AFB0810
+                new_resolution = 10
+                resample_raster(input_raster, output_raster, new_resolution)
             
-            if not os.path.exists(AFB8A10):
+            if os.path.exists(AFB8A10) == False:
                 print(print_time() + "Raster_Process :: Resample " + Short_name + "B8A")
-                resample_raster(AFB8A, AFB8A10, 10)
+                input_raster = AFB8A
+                output_raster = AFB8A10
+                new_resolution = 10
+                resample_raster(input_raster, output_raster, new_resolution)
 
-            if not os.path.exists(AFB0910):
+            if os.path.exists(AFB0910) == False:
                 print(print_time() + "Raster_Process :: Resample " + Short_name + "B09")
-                resample_raster(AFB09, AFB0910, 10)
+                input_raster = AFB09
+                output_raster = AFB0910
+                new_resolution = 10
+                resample_raster(input_raster, output_raster, new_resolution)
 
-            if not os.path.exists(AFB1210):
-                print(print_time() + "Raster_Process :: Resample " + Mid_name)
-                resample_raster(AFB12, AFB1210, 10)
+            if os.path.exists(AFB1210) == False:
+                print(print_time()+"Raster_Process :: Resample " + Mid_name)
+                input_raster = AFB12
+                output_raster = AFB1210
+                new_resolution = 10
+                resample_raster(input_raster, output_raster, new_resolution)
 
             try:
-                print(print_time() + "Raster_Process :: Raster Process " + Full_name[:22])
-                with rasterio.open(BFB02) as src_BFB02, rasterio.open(AFB02) as src_AFB02:
+                print(print_time()+"Raster_Process :: Raster Process " + Full_name[:22])
+
+                threshold_value = 0
+
+                with rasterio.open(BFB02) as src_BFB02,rasterio.open(AFB02) as src_AFB02:
                     data_BFB02 = src_BFB02.read(1)
                     data_AFB02 = src_AFB02.read(1)
-                with rasterio.open(BFB03) as src_BFB03, rasterio.open(AFB03) as src_AFB03:
+                    print("Shape of data_AFB02:", data_AFB02.shape) 
+                    
+                with rasterio.open(BFB03) as src_BFB03,rasterio.open(AFB03) as src_AFB03:
                     data_BFB03 = src_BFB03.read(1)
                     data_AFB03 = src_AFB03.read(1)
-                with rasterio.open(BFB04) as src_BFB04, rasterio.open(AFB04) as src_AFB04:
+                    print("Shape of data_AFB03:", data_AFB03.shape) 
+
+                with rasterio.open(BFB04) as src_BFB04,rasterio.open(AFB04) as src_AFB04:
                     data_BFB04 = src_BFB04.read(1)
                     data_AFB04 = src_AFB04.read(1)
+                    print("Shape of data_AFB04:", data_AFB04.shape)
+
                 with rasterio.open(AFB0510) as src_AFB0510:
                     data_AFB0510 = src_AFB0510.read(1)
+                    print("Shape of data_AFB05:", data_AFB0510.shape)  
+                
                 with rasterio.open(AFB0610) as src_AFB0610:
                     data_AFB0610 = src_AFB0610.read(1)
+                    print("Shape of data_AFB06:", data_AFB0610.shape) 
+                
                 with rasterio.open(AFB0710) as src_AFB0710:
                     data_AFB0710 = src_AFB0710.read(1)
+                    print("Shape of data_AFB07:", data_AFB0710.shape)  
+                
                 with rasterio.open(BFB08) as src_BFB08, rasterio.open(AFB08) as src_AFB08, rasterio.open(AFB8A10) as src_AFB8A10:
                     data_BFB08 = src_BFB08.read(1)
                     data_AFB08 = src_AFB08.read(1)
                     data_AFB8A10 = src_AFB8A10.read(1)
+                    print("Shape of data_AFB08:", data_AFB08.shape)  
+                    print("Shape of data_AFB8A:", data_AFB8A10.shape)  
+
                 with rasterio.open(AFB0910) as src_AFB0910:
-                    data_AFB0910 = src_AFB0910.read(1)
-                with rasterio.open(BFB1210) as src_BFB1210, rasterio.open(AFB1210) as src_AFB1210:
+                    data_AFB0910 = src_AFB0910.read(1) 
+                
+                with rasterio.open(BFB1210) as src_BFB1210,rasterio.open(AFB1210) as src_AFB1210:
                     data_BFB1210 = src_BFB1210.read(1)
                     data_AFB1210 = src_AFB1210.read(1)
+                    print("Shape of data_BFB12:", data_BFB1210.shape) 
+                    print("Shape of data_AFB12:", data_AFB1210.shape)
 
                 bfb08_shape = data_BFB08.shape
                 data_BFB08 = np.resize(data_BFB08, bfb08_shape)
@@ -288,14 +345,34 @@ def Raster_Process(Track):
                 data_AFB0910 = np.resize(data_AFB0910, bfb08_shape)
                 data_AFB1210 = np.resize(data_AFB1210, bfb08_shape)
 
-                PreNBR_data = (data_BFB08 - data_BFB1210) / (data_BFB08 + data_BFB1210)
-                PostNBR_data = (data_AFB08 - data_AFB1210) / (data_AFB08 + data_AFB1210)
-                rNDI = (data_BFB08 - data_AFB08) / (data_BFB08 + data_AFB08)
-                dNBR = PreNBR_data - PostNBR_data
-                dNDWI = (data_AFB03 - data_AFB08) / (data_AFB03 + data_AFB08)
-                dNDVI = (data_AFB08 - data_AFB04) / (data_AFB08 + data_AFB04)
+                print("Shape of data_AFB02 (Reshape):", data_AFB02.shape) 
+                print("Shape of data_AFB03 (Reshape):", data_AFB03.shape)  
+                print("Shape of data_AFB04 (Reshape):", data_AFB04.shape)
+                print("Shape of data_AFB05 (Reshape):", data_AFB0510.shape)  
+                print("Shape of data_AFB06 (Reshape):", data_AFB0610.shape) 
+                print("Shape of data_AFB07 (Reshape):", data_AFB0710.shape)  
+                print("Shape of data_AFB08 (Reshape):", data_AFB08.shape)  
+                print("Shape of data_AFB8A (Reshape):", data_AFB8A10.shape)  
+                print("Shape of data_AFB09 (Reshape):", data_AFB0910.shape)  
+                print("Shape of data_BFB12 (Reshape):", data_BFB1210.shape) 
+                print("Shape of data_AFB12 (Reshape):", data_AFB1210.shape) 
 
-                def burn_con_lv1(rNDI, output_path):
+                PreNBR_data = (data_BFB08 - data_BFB1210) / (data_BFB08 + data_BFB1210)
+                print_with_tag(PreNBR_data, 'PreNBR_data')
+                print_with_tag(data_AFB02, 'data_AFB02')
+                print_with_tag(data_AFB03, 'data_AFB03')
+                print_with_tag(data_AFB08, 'data_AFB08')
+                print_with_tag(data_AFB1210, 'data_AFB1210')
+                PostNBR_data = (data_AFB08 - data_AFB1210) / (data_AFB08 + data_AFB1210)
+                print_with_tag(PostNBR_data, 'PostNBR_data')
+
+                print(print_time()+"Raster_Process :: Burn Raster Condition")
+                rNDI = (data_BFB08 - data_AFB08) /(data_BFB08 + data_AFB08)    
+                dNBR = PreNBR_data-PostNBR_data
+                dNDWI = (data_AFB03 - data_AFB08) /(data_AFB03 + data_AFB08)
+                dNDVI = (data_AFB08-data_AFB04) / (data_AFB08+data_AFB04)
+
+                def burn_con_lv1(rNDI,output_path):
                     burn_con_lv1 = np.where((rNDI > 0.3), 1, 0)
                     burn_con_lv1 = np.where(
                         np.any(
@@ -310,25 +387,37 @@ def Raster_Process(Track):
                     save_as_geotiff(burn_con_lv1, output_path)
 
                 output_path = RtbLevel + Track + Full_name + "_Lv1.tif"
-                burn_con_lv1(rNDI, output_path)
+                burn_con_lv1(rNDI,output_path)
+
+                threshold_value = 0
+                print(print_time()+"Raster_Process :: RegionGroup Level 1")
 
                 BCONLV1 = os.path.join(RtbLevel, Track, f"{Full_name}_Lv1.tif")
+                
                 with rasterio.open(BCONLV1) as src_BCONLV1:
                     data_BCONLV1 = src_BCONLV1.read(1)
 
                 def burn_regionlv1(data_BCONLV1, track, full_name):
                     burnRegionGrp = measure.label(data_BCONLV1, connectivity=2)
-                    burnRegionGrpThresholded = np.where(burnRegionGrp > 0, 1, 0)
+                    print(print_time() + f"Raster_Process :: Region > {threshold_value}")
+
+                    burnRegionGrpThresholded = np.where(burnRegionGrp > threshold_value, 1, 0)
+
                     burnRegionLv1 = np.where(burnRegionGrpThresholded == 1, 1, 0)
-                    output_path = Rtbreg + track + Short_name + "_B12" + "_Lv1" + ".tif"
+
+                    print(print_time() + "Raster_Process :: Save Raster Level 1")
+
+                    output_path = Rtbreg + track + Short_name+ "_B12" + "_Lv1"+".tif"
                     save_as_geotiff(burnRegionLv1, output_path)
+                    
                     return burnRegionLv1
-
+                
                 burn_regionlv1(data_BCONLV1, Track, Full_name)
+                burnRegionlv1 = burn_regionlv1(data_BCONLV1, Track, Full_name)
 
-                def burn_con_lv2(rNDI, data_AFB03, data_AFB08, output_path):
+                def burn_con_lv2(rNDI,data_AFB03,data_AFB08, output_path):
                     burn_con_lv1 = np.where((rNDI > 0.3), 1, 0)
-                    burn_con_lv2 = np.where(((burn_con_lv1 == 1) & (data_AFB08 > data_AFB03)), 1, 0)
+                    burn_con_lv2 = np.where(((burn_con_lv1 == 1) &(data_AFB08 > data_AFB03)), 1, 0)
                     burn_con_lv2 = np.where(
                         np.any(
                             (
@@ -342,26 +431,35 @@ def Raster_Process(Track):
                     save_as_geotiff(burn_con_lv2, output_path)
 
                 output_path = RtbLevel + Track + Full_name + "_Lv2.tif"
-                burn_con_lv2(rNDI, data_AFB03, data_AFB08, output_path)
+                burn_con_lv2(rNDI,data_AFB03,data_AFB08, output_path)
 
                 BCONLV2 = os.path.join(RtbLevel, Track, f"{Full_name}_Lv2.tif")
+                
                 with rasterio.open(BCONLV2) as src_BCONLV2:
                     data_BCONLV2 = src_BCONLV2.read(1)
 
                 def burn_regionlv2(data_BCONLV2, track, full_name):
                     burnRegionGrp = measure.label(data_BCONLV2, connectivity=2)
-                    burnRegionGrpThresholded = np.where(burnRegionGrp > 0, 1, 0)
+                    print(print_time() + f"Raster_Process :: Region > {threshold_value}")
+
+                    burnRegionGrpThresholded = np.where(burnRegionGrp > threshold_value, 1, 0)
+
                     burnRegionLv2 = np.where(burnRegionGrpThresholded == 1, 1, 0)
-                    output_path = Rtbreg + track + Short_name + "_B12" + "_Lv2" + ".tif"
+
+                    print(print_time() + "Raster_Process :: Save Raster Level 2")
+
+                    output_path = Rtbreg + track + Short_name+ "_B12" + "_Lv2"+".tif"
                     save_as_geotiff(burnRegionLv2, output_path)
+                    
                     return burnRegionLv2
-
+                
                 burn_regionlv2(data_BCONLV2, Track, Full_name)
+                burnRegionlv2 = burn_regionlv2(data_BCONLV2, Track, Full_name)
 
-                def burn_con_lv3(dNDVI, rNDI, data_AFB08, data_AFB03, output_path):
+                def burn_con_lv3(dNDVI,rNDI,data_AFB08,data_AFB03, output_path):
                     burn_con_lv1 = np.where((rNDI > 0.3), 1, 0)
-                    burn_con_lv2 = np.where((data_AFB08 > data_AFB03), 1, 0)
-                    burn_con_lv3 = np.where(((burn_con_lv1 == 1) & (burn_con_lv2 == 1) & (dNDVI < 0.14)), 1, 0)
+                    burn_con_lv2 = np.where((data_AFB08 > data_AFB03),1,0)
+                    burn_con_lv3 = np.where(((burn_con_lv1 == 1)&(burn_con_lv2 == 1)&(dNDVI < 0.14)),1,0)
                     burn_con_lv3 = np.where(
                         np.any(
                             (
@@ -375,27 +473,35 @@ def Raster_Process(Track):
                     save_as_geotiff(burn_con_lv3, output_path)
 
                 output_path = RtbLevel + Track + Full_name + "_Lv3.tif"
-                burn_con_lv3(dNDVI, rNDI, data_AFB08, data_AFB03, output_path)
+                burn_con_lv3(dNDVI,rNDI,data_AFB08,data_AFB03,output_path)
 
                 BCONLV3 = os.path.join(RtbLevel, Track, f"{Full_name}_Lv3.tif")
+                
                 with rasterio.open(BCONLV3) as src_BCONLV3:
                     data_BCONLV3 = src_BCONLV3.read(1)
 
                 def burn_regionlv3(data_BCONLV3, track, full_name):
                     burnRegionGrp = measure.label(data_BCONLV3, connectivity=2)
-                    burnRegionGrpThresholded = np.where(burnRegionGrp > 0, 1, 0)
+                    print(print_time() + f"Raster_Process :: Region > {threshold_value}")
+
+                    burnRegionGrpThresholded = np.where(burnRegionGrp > threshold_value, 1, 0)
+
                     burnRegionLv3 = np.where(burnRegionGrpThresholded == 1, 1, 0)
-                    output_path = Rtbreg + track + Short_name + "_B12" + "_Lv3" + ".tif"
+                    print(print_time() + "Raster_Process :: Save Raster Level 3")
+
+                    output_path = Rtbreg + track + Short_name+ "_B12" + "_Lv3"+".tif"
                     save_as_geotiff(burnRegionLv3, output_path)
+                    
                     return burnRegionLv3
-
+                
                 burn_regionlv3(data_BCONLV3, Track, Full_name)
+                burnRegionlv3 = burn_regionlv3(data_BCONLV3, Track, Full_name)
 
-                def burn_con_lv4(data_AFB08, rNDI, data_AFB03, dNDVI, output_path):
+                def burn_con_lv4(data_AFB08,rNDI,data_AFB03,dNDVI, output_path):
                     burn_con_lv1 = np.where((rNDI > 0.3), 1, 0)
-                    burn_con_lv2 = np.where((data_AFB08 > data_AFB03), 1, 0)
-                    burn_con_lv3 = np.where((dNDVI < 0.14), 1, 0)
-                    burn_con_lv4 = np.where(((burn_con_lv1 == 1) & (burn_con_lv2 == 1) & (burn_con_lv3 == 1) & (data_AFB08 < 2000)), 1, 0)
+                    burn_con_lv2 = np.where((data_AFB08 > data_AFB03),1,0)
+                    burn_con_lv3 = np.where((dNDVI < 0.14),1,0)
+                    burn_con_lv4 = np.where(((burn_con_lv1 == 1)&(burn_con_lv2 == 1)&(burn_con_lv3 == 1)&(data_AFB08 < 2000)),1,0)
                     burn_con_lv4 = np.where(
                         np.any(
                             (
@@ -409,28 +515,36 @@ def Raster_Process(Track):
                     save_as_geotiff(burn_con_lv4, output_path)
 
                 output_path = RtbLevel + Track + Full_name + "_Lv4.tif"
-                burn_con_lv4(data_AFB08, rNDI, data_AFB03, dNDVI, output_path)
+                burn_con_lv4(data_AFB08,rNDI,data_AFB03,dNDVI,output_path)
 
                 BCONLV4 = os.path.join(RtbLevel, Track, f"{Full_name}_Lv4.tif")
+                
                 with rasterio.open(BCONLV4) as src_BCONLV4:
                     data_BCONLV4 = src_BCONLV4.read(1)
 
                 def burn_regionlv4(data_BCONLV4, track, full_name):
                     burnRegionGrp = measure.label(data_BCONLV4, connectivity=2)
-                    burnRegionGrpThresholded = np.where(burnRegionGrp > 0, 1, 0)
-                    burnRegionLv4 = np.where(burnRegionGrpThresholded == 1, 1, 0)
-                    output_path = Rtbreg + track + Short_name + "_B12" + "_Lv4" + ".tif"
-                    save_as_geotiff(burnRegionLv4, output_path)
-                    return burnRegionLv4
+                    print(print_time() + f"Raster_Process :: Region > {threshold_value}")
 
+                    burnRegionGrpThresholded = np.where(burnRegionGrp > threshold_value, 1, 0)
+
+                    burnRegionLv4 = np.where(burnRegionGrpThresholded == 1, 1, 0)
+                    print(print_time() + "Raster_Process :: Save Raster Level 4")
+
+                    output_path = Rtbreg + track + Short_name+ "_B12" + "_Lv4"+".tif"
+                    save_as_geotiff(burnRegionLv4, output_path)
+                    
+                    return burnRegionLv4
+                
                 burn_regionlv4(data_BCONLV4, Track, Full_name)
+                burnRegionlv4 = burn_regionlv4(data_BCONLV4, Track, Full_name)
 
                 def burn_con(rNDI, dNDVI, data_AFB03, data_AFB08, output_path):
                     burn_con_lv1 = np.where((rNDI > 0.3), 1, 0)
                     burn_con_lv2 = np.where((data_AFB08 > data_AFB03), 1, 0)
                     burn_con_lv3 = np.where((dNDVI < 0.14), 1, 0)
                     burn_con_lv4 = np.where((data_AFB08 < 2000), 1, 0)
-                    burnCon_Final = np.where(((burn_con_lv1 == 1) & (burn_con_lv2 == 1) & (burn_con_lv3 == 1) & (burn_con_lv4 == 1)), 1, 0)
+                    burnCon_Final = np.where(((burn_con_lv1 == 1) &(burn_con_lv2 == 1) &(burn_con_lv3 == 1) &(burn_con_lv4== 1)), 1, 0)
                     burnCon_Final = np.where(
                         np.any(
                             (
@@ -446,19 +560,32 @@ def Raster_Process(Track):
                 output_path = Rtbcon + Track + Full_name + ".tif"
                 burn_con(rNDI, dNDVI, data_AFB03, data_AFB08, output_path)
 
+                print(print_time()+"Raster_Process :: RegionGroup")
+
                 BCON = os.path.join(Rtbcon, Track, f"{Full_name}.tif")
+
                 with rasterio.open(BCON) as src_BCON:
                     data_BCON = src_BCON.read(1)
 
                 def burn_region(data_BCON, track, full_name):
                     burnRegionGrp = measure.label(data_BCON, connectivity=1)
-                    burnRegionGrpThresholded = np.where(burnRegionGrp > 0, 1, 0)
-                    burnRegion = np.where(burnRegionGrpThresholded == 1, 1, 0)
-                    output_path = Rtbreg + track + Short_name + "_B12" + ".tif"
-                    save_as_geotiff(burnRegion, output_path)
-                    return burnRegion
+                    print(print_time() + f"Raster_Process :: Region > {threshold_value}")
 
+                    burnRegionGrpThresholded = np.where(burnRegionGrp > threshold_value, 1, 0)
+
+                    burnRegion = np.where(burnRegionGrpThresholded == 1, 1, 0)
+
+                    print(print_time() + "Raster_Process :: Save Raster")
+
+                    output_path = Rtbreg + track + Short_name+ "_B12" + ".tif"
+                    save_as_geotiff(burnRegion, output_path)
+                    
+                    return burnRegion
+                
                 burn_region(data_BCON, Track, Full_name)
+                burnRegion = burn_region(data_BCON, Track, Full_name)
+
+                print(print_time()+"  DataFrame Process ")
 
                 with rasterio.open(BFB08) as src:
                     bounds = src.bounds
@@ -472,7 +599,7 @@ def Raster_Process(Track):
                     lon_list = lon_grid.ravel()
 
                     lat_wgs84, lon_wgs84 = transform(crs, 'EPSG:4326', lon_list, lat_list)
-
+                    
                     rNDI_data = rNDI.ravel()
                     dNBR_data = dNBR.ravel()
                     band_3_data = data_AFB03.ravel()
@@ -487,11 +614,11 @@ def Raster_Process(Track):
                     PostNBR_data = PostNBR_data.ravel()
                     ndvi_data = dNDVI.ravel()
                     ndwi_data = dNDWI.ravel()
-                    level_1_data = burn_regionlv1(data_BCONLV1, Track, Full_name).ravel()
-                    level_2_data = burn_regionlv2(data_BCONLV2, Track, Full_name).ravel()
-                    level_3_data = burn_regionlv3(data_BCONLV3, Track, Full_name).ravel()
-                    level_4_data = burn_regionlv4(data_BCONLV4, Track, Full_name).ravel()
-                    label_data = burn_region(data_BCON, Track, Full_name).ravel()
+                    level_1_data = burnRegionlv1.ravel()
+                    level_2_data = burnRegionlv2.ravel()
+                    level_3_data = burnRegionlv3.ravel()
+                    level_4_data = burnRegionlv4.ravel()
+                    label_data = burnRegion.ravel()
 
                     df = pd.DataFrame({
                         'Latitude_WGS84': lon_wgs84,
@@ -508,7 +635,7 @@ def Raster_Process(Track):
                         'PostNBR': PostNBR_data,
                         'NDVI': ndvi_data,
                         'NDWI': ndwi_data,
-                        'dNBR': dNBR_data,
+                        'dNBR' : dNBR_data,
                         'rNDI': rNDI_data,
                         'Level_1': level_1_data,
                         'Level_2': level_2_data,
@@ -518,49 +645,62 @@ def Raster_Process(Track):
                     })
 
                     df.fillna(0, inplace=True)
+
                     output_filename = f"{Full_name}_burn_data.csv"
                     output_path = os.path.join(Rtbcon + Track, output_filename)
                     df.to_csv(output_path, index=False)
 
-                print(print_time() + "Raster_Process :: Burn Raster Process Complete")
+                print(print_time()+"Raster_Process :: Burn Raster Process Complate")
 
                 def reclassify_raster(input_raster, output_raster, remap_dict):
                     with rasterio.open(input_raster) as src:
                         data = src.read(1)
                         profile = src.profile
+
                         for old_value, new_value in remap_dict.items():
                             data = np.where(data == old_value, new_value, data)
+
                         with rasterio.open(output_raster, 'w', **profile) as dst:
                             dst.write(data, 1)
 
                 burnRegion = os.path.join(Rtbreg, Track, f"{Short_name}_B12.tif")
                 burnReclass = os.path.join(Rtbreg, Track, f"{Short_name}_BurnReclass.tif")
                 remap_dict = {1: 1}
+
                 reclassify_raster(burnRegion, burnReclass, remap_dict)
+
+                print("After burn reclasss")
 
                 def raster_to_polygon(input_raster, output_shapefile, simplify=0, value_field="VALUE"):
                     with rasterio.open(input_raster) as src:
                         image = src.read(1)
                         shapes = rasterio.features.shapes(image, transform=src.transform)
+
                         geometries = []
                         values = []
+
                         for geom, value in shapes:
                             if simplify > 0:
                                 geom = shape(geom).simplify(simplify)
+
                             geometries.append(geom)
                             values.append(value)
+
                         gdf = gpd.GeoDataFrame({value_field: values, 'geometry': geometries})
+
                         if simplify > 0:
                             gdf['geometry'] = gdf['geometry'].apply(lambda x: x.simplify(simplify))
+
                         dissolved_gdf = gdf.dissolve(by=value_field)
                         dissolved_gdf.to_file(output_shapefile)
 
                 burnReclass = os.path.join(Rtbreg, Track, f"{Short_name}_BurnReclass.tif")
-                output_shapefile = RtbShape + Track + Short_name + "_B12" + ".shp"
+                output_shapefile = RtbShape + Track + Short_name+ "_B12" + ".shp"
                 simplify_value = 0.1
-                raster_to_polygon(burnReclass, output_shapefile, simplify=simplify_value)
 
-                print(print_time() + "Raster_Process :: Start Move File ")
+                raster_to_polygon(burnReclass, output_shapefile, simplify=simplify_value)
+                
+                print(print_time()+"Raster_Process :: Start Move File ")
                 Move_File(Mid_name + "B03.jp2", Image + Track, Image_Finish + Track)
                 Move_File(Mid_name + "B04.jp2", Image + Track, Image_Finish + Track)
                 Move_File(Mid_name + "B08.jp2", Image + Track, Image_Finish + Track)
@@ -570,12 +710,14 @@ def Raster_Process(Track):
                 Move_File(Mid_name + "B1210.jp2.ovr", Image + Track, Image_Finish + Track)
                 Move_File(Mid_name + "B1210.jp2.xml", Image + Track, Image_Finish + Track)
                 Error_Limit = 2
-                print(print_time() + "Raster_Process :: Raster_Process ALL Complete >>>>>>>>>>>>>>>>>>>> \n \n")
+                print(print_time()+"Raster_Process :: Raster_Process ALL Complate >>>>>>>>>>>>>>>>>>>> \n \n")
 
                 shapefile_path = os.path.join(RtbShape, Track, f"{Short_name}_B12.shp")
                 image_path = os.path.join(Image, Track, f"{Full_name}10.jp2")
                 gdf = gpd.read_file(shapefile_path)
+
                 image = plt.imread(image_path)
+
                 fig, ax = plt.subplots(figsize=(16, 16))
                 ax.imshow(image, cmap='gray')
                 gdf.plot(ax=ax, color='red', edgecolor='red', alpha=.5)
@@ -583,11 +725,11 @@ def Raster_Process(Track):
                 plt.show()
 
             except Exception as e:
-                print(print_time() + "Raster_Process :: !!!!!!!!!! RASTER ERROR !!!!!!!!!!")
+                print(print_time()+"Raster_Process :: !!!!!!!!!! RASTER ERROR !!!!!!!!!!")
                 print(print_time() + str(e))
-                Error_Limit -= 1
-                if Error_Limit < 1:
-                    print(print_time() + "Raster_Process :: !!!!!!!!!! RASTER ERROR 2 Times MoveFile to Image_Missing")
+                Error_Limit = Error_Limit - 1
+                if Error_Limit < 1 :
+                    print(print_time()+"Raster_Process :: !!!!!!!!!! RASTER ERROR 2 Time MoveFile to Image_Missin")
                     Move_File(Mid_name + "B03.jp2", Image + Track, Image_Missing + Track)
                     Move_File(Mid_name + "B04.jp2", Image + Track, Image_Missing + Track)
                     Move_File(Mid_name + "B08.jp2", Image + Track, Image_Missing + Track)
@@ -597,6 +739,7 @@ def Raster_Process(Track):
                     Move_File(Mid_name + "B1210.jp2.ovr", Image + Track, Image_Missing + Track)
                     Move_File(Mid_name + "B1210.jp2.xml", Image + Track, Image_Missing + Track)
                     Error_Limit = 2
+
         else:
             print(print_time() + f"Raster_Process :: {Full_name[:22]} Image not Found !!!!")
             print(BFB03, "_", os.path.exists(BFB03))
@@ -606,6 +749,7 @@ def Raster_Process(Track):
             print(AFB03, "_", os.path.exists(AFB03))
             print(AFB04, "_", os.path.exists(AFB04))
             print(AFB08, "_", os.path.exists(AFB08))
+
             Move_File(f"{Mid_name}B03.jp2", os.path.join(Image, Track), os.path.join(Image_Missing, Track))
             Move_File(f"{Mid_name}B04.jp2", os.path.join(Image, Track), os.path.join(Image_Missing, Track))
             Move_File(f"{Mid_name}B08.jp2", os.path.join(Image, Track), os.path.join(Image_Missing, Track))
@@ -614,6 +758,40 @@ def Raster_Process(Track):
             Move_File(f"{Mid_name}B1210.jp2.aux.xml", os.path.join(Image, Track), os.path.join(Image_Missing, Track))
             Move_File(f"{Mid_name}B1210.jp2.ovr", os.path.join(Image, Track), os.path.join(Image_Missing, Track))
             Move_File(f"{Mid_name}B1210.jp2.xml", os.path.join(Image, Track), os.path.join(Image_Missing, Track))
-
+        
     print(print_time() + "Wait New Raster ::")
     mode = True
+
+def main():
+    current_dir = os.getcwd()
+    print("Current Working Directory:", current_dir)
+    global mode, Image_Post, Track_arr
+    print(print_time() + "Application Start ::")
+
+    track_index = 0
+
+    while track_index < len(Track_arr):
+        t = Timer(systemCooldown, loadCooldown)
+        t.start()
+        t.join()
+
+        if mode:
+            Track = Track_arr[track_index]
+            image_track = os.path.join(Image, Track)
+            if os.path.exists(image_track):
+                rasters = [r for r in os.listdir(image_track) if r.endswith('B12.jp2')]
+                if rasters:
+                    mode = False
+                    print(print_time() + "Found NEW Raster :: ")
+                    try:
+                        Raster_Process(Track)
+                    except Exception as e:
+                        print(print_time() + "!!!!!!!!!SYSTEM ERROR !!!!!!!!!!!")
+                        print(print_time() + str(e))
+                        print(print_time() + "Wait New Raster ::")
+                else:
+                    print(f"Directory not found: {image_track}")
+
+            track_index += 1
+
+main()
