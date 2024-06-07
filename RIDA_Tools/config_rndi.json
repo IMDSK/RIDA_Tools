@@ -1,0 +1,5 @@
+{
+    "burn_con_lv1_threshold_rndi": 0.3,
+    "burn_con_lv3_threshold_rndi": 0.14,
+    "burn_con_lv4_threshold_rndi": 2000
+}
