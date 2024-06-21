@@ -127,11 +127,12 @@ def process_files(folder_path, output_folder_pre, output_folder_after, config=No
         logger.error("Required files are missing in 'Before' folder.")
         return
 
-    prepare_dir_before = './prepare_image/Before'
-    prepare_dir_after = './prepare_image/After'
-    rename_dir_before = './rename_image/Before'
-    rename_dir_after = './rename_image/After'
-    
+
+    prepare_dir_before = '.\\prepare_image\\Before'
+    prepare_dir_after = '.\\prepare_image\\After'
+    rename_dir_before = '.\\rename_image\\Before'
+    rename_dir_after = '.\\rename_image\\After'
+
     # Create directories if they don't exist
     for directory in [prepare_dir_before, prepare_dir_after, rename_dir_before, rename_dir_after]:
         if not os.path.exists(directory):
@@ -213,8 +214,9 @@ def process_files_predict(folder_path, output_folder_after):
 
     after_jp2_files = [f for f in os.listdir(after_path) if f.endswith(".jp2")]
 
-    prepare_dir_after = './prepare_image/After'
-    rename_dir_after = './rename_image/After'
+    prepare_dir_after = '.\\prepare_image\\After'
+    rename_dir_after = '.\\rename_image\\After'
+
     
     # Create directories if they don't exist
     for directory in [prepare_dir_after, rename_dir_after]:
@@ -267,9 +269,9 @@ def submit_folder_dnbr(folder_path, output_folder_pre, output_folder_after, conf
         logger.info(f"Processing folder: {folder_path}")
         process_files(folder_path, output_folder_pre, output_folder_after, config)
         logger.info("Processing completed for selected folder.")
-        
+
         # Define the path to the subprocess script
-        script_path = "/Users/imdsk/RIDA_Tools/RIDA_Tools/SentinelProcess_Train_dNBR.py"
+        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Train_dNBR.py"
         
         # Run the script as a subprocess
         try:
@@ -287,8 +289,8 @@ def submit_folder_rndi(folder_path, output_folder_pre, output_folder_after, conf
         logger.info("Processing completed for selected folder.")
         
         # Define the path to the subprocess script
-        script_path = "/Users/imdsk/RIDA_Tools/RIDA_Tools/SentinelProcess_Train_rNDI.py"
-        
+        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Train_rNDI.py"
+    
         # Run the script as a subprocess
         try:
             result = subprocess.run(["python", script_path], capture_output=True, text=True, check=True)
@@ -305,8 +307,8 @@ def submit_folder_predict(folder_path, output_folder_after):
         logger.info("Processing completed for selected folder.")
         
         # Define the path to the subprocess script
-        script_path = "/Users/imdsk/RIDA_Tools/RIDA_Tools/SentinelProcess_Predict.py"
-        
+        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Predict.py"
+       
         # Run the script as a subprocess
         try:
             result = subprocess.run(["python", script_path], capture_output=True, text=True, check=True)

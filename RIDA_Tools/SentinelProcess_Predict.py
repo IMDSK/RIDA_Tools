@@ -25,27 +25,30 @@ systemCooldown = 2
 Error_Limit = 1
 mode = True
 
-Drive = "/Users/imdsk/RIDA_Tools/Sentinel_Process/"
+# Define paths with double backslashes
+Drive = "D:\\RIDA\\Sentinel_Process"
 Image = os.path.join(Drive, "Image")
-Image_Pre = os.path.join(Drive, "Image_Pre/")
-Image_Finish = os.path.join(Drive, "Image_Finish/")
-Image_Missing = os.path.join(Drive, "Image_Missing/")
-Output = os.path.join(Drive, "Output/")
-Rtbcon = os.path.join(Drive, "Raster_BurnCon/")
-Rtbreg = os.path.join(Drive, "Raster_BurnReg/")
-RtbShape = os.path.join(Drive, "Raster_BurnShape/")
-RtbLevel = os.path.join(Drive, "Raster_BurnLevel/")
+Image_Pre = os.path.join(Drive, "Image_Pre")
+Image_Finish = os.path.join(Drive, "Image_Finish")
+Image_Missing = os.path.join(Drive, "Image_Missing")
+Output = os.path.join(Drive, "Output")
+Rtbcon = os.path.join(Drive, "Raster_BurnCon")
+Rtbreg = os.path.join(Drive, "Raster_BurnReg")
+RtbShape = os.path.join(Drive, "Raster_BurnShape")
+RtbLevel = os.path.join(Drive, "Raster_BurnLevel")
+
+# Adjusted file paths in Track_arr list
 Track_arr = [
-    "Area1/","Area2/","Area3/","Area4/","Area5/","Area6/","Area7/","Area8/","Area9/","Area10/","Area11/","Area12/",
-    "Area00/", "Area01/", "Area02/", "Area03/", "Area04/", "Area05/", "Area06/", "Area07/", "Area08/", "Area09/",
-    "Area10/", "Area11/", "Area12/", "Area13/", "Area14/", "Area15/", "Area16/", "Area17/", "Area18/", "Area19/",
-    "Area20/", "Area21/", "Area22/", "Area23/", "Area24/", "Area25/", "Area26/", "Area27/", "Area28/", "Area29/",
-    "Area30/", "Area31/", "Area32/", "Area33/", "Area34/", "Area35/", "Area36/", "Area37/", "Area38/", "Area39/",
-    "Area40/", "Area41/", "Area42/", "Area43/", "Area44/", "Area45/", "Area46/", "Area47/", "Area48/", "Area49/",
-    "Area50/", "Area51/", "Area52/", "Area53/", "Area54/", "Area55/", "Area56/", "Area57/", "Area58/", "Area59/",
-    "Area60/", "Area61/", "Area62/", "Area63/", "Area64/", "Area65/", "Area66/", "Area67/", "Area68/", "Area69/",
-    "Area70/", "Area71/", "Area72/", "Area73/", "Area74/", "Area75/", "Area76/", "Area77/", "Area78/", "Area79/",
-    "Area80/", "Area81/", "Area82/", "Area83/", "Area84/", "Area85/"
+    "Area1\\", "Area2\\", "Area3\\", "Area4\\", "Area5\\", "Area6\\", "Area7\\", "Area8\\", "Area9\\", "Area10\\", "Area11\\", "Area12\\",
+    "Area00\\", "Area01\\", "Area02\\", "Area03\\", "Area04\\", "Area05\\", "Area06\\", "Area07\\", "Area08\\", "Area09\\",
+    "Area10\\", "Area11\\", "Area12\\", "Area13\\", "Area14\\", "Area15\\", "Area16\\", "Area17\\", "Area18\\", "Area19\\",
+    "Area20\\", "Area21\\", "Area22\\", "Area23\\", "Area24\\", "Area25\\", "Area26\\", "Area27\\", "Area28\\", "Area29\\",
+    "Area30\\", "Area31\\", "Area32\\", "Area33\\", "Area34\\", "Area35\\", "Area36\\", "Area37\\", "Area38\\", "Area39\\",
+    "Area40\\", "Area41\\", "Area42\\", "Area43\\", "Area44\\", "Area45\\", "Area46\\", "Area47\\", "Area48\\", "Area49\\",
+    "Area50\\", "Area51\\", "Area52\\", "Area53\\", "Area54\\", "Area55\\", "Area56\\", "Area57\\", "Area58\\", "Area59\\",
+    "Area60\\", "Area61\\", "Area62\\", "Area63\\", "Area64\\", "Area65\\", "Area66\\", "Area67\\", "Area68\\", "Area69\\",
+    "Area70\\", "Area71\\", "Area72\\", "Area73\\", "Area74\\", "Area75\\", "Area76\\", "Area77\\", "Area78\\", "Area79\\",
+    "Area80\\", "Area81\\", "Area82\\", "Area83\\", "Area84\\", "Area85\\"
 ]
 
 def loadCooldown():
@@ -321,33 +324,27 @@ def Raster_Process(Track):
 def main():
     current_dir = os.getcwd()
     print("Current Working Directory:", current_dir)
-    global mode, Image_Post, Track_arr
+    global mode, Image_Post
     print(print_time() + "Application Start ::")
 
-    track_index = 0
+    # Get the list of directories inside the 'Image' directory
+    image_directories = [d for d in os.listdir(Image) if os.path.isdir(os.path.join(Image, d))]
 
-    while track_index < len(Track_arr):
-        t = Timer(systemCooldown, loadCooldown)
-        t.start()
-        t.join()
+    for area_dir in image_directories:
+        area_path = os.path.join(Image, area_dir)
+        rasters = [r for r in os.listdir(area_path) if r.endswith('B1210.jp2')]
+        if rasters:
+            mode = False
+            print(print_time() + f"Found NEW Raster in Area: {area_dir}")
+            try:
+                Raster_Process(area_dir)
+            except Exception as e:
+                print(print_time() + "!!!!!!!!!SYSTEM ERROR !!!!!!!!!!!")
+                print(print_time() + str(e))
+                print(print_time() + "Wait New Raster ::")
+        else:
+            print(f"No rasters found in directory: {area_path}")
 
-        if mode:
-            Track = Track_arr[track_index]
-            image_track = os.path.join(Image, Track)
-            if os.path.exists(image_track):
-                rasters = [r for r in os.listdir(image_track) if r.endswith('B1210.jp2')]
-                if rasters:
-                    mode = False
-                    print(print_time() + "Found NEW Raster :: ")
-                    try:
-                        Raster_Process(Track)
-                    except Exception as e:
-                        print(print_time() + "!!!!!!!!!SYSTEM ERROR !!!!!!!!!!!")
-                        print(print_time() + str(e))
-                        print(print_time() + "Wait New Raster ::")
-                else:
-                    print(f"Directory not found: {image_track}")
-
-            track_index += 1
+    print(print_time() + f"{len(image_directories)} Area(s) processed.")
 
 main()

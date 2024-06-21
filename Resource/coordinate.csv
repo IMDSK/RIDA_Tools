@@ -1,3 +1,3 @@
-top_left_lon,top_left_lat,bottom_right_lon,bottom_right_lat,area
-99.3555,19.5384,99.4582,19.4559,Area1
-99.4555,19.6384,99.5582,19.5559,Area2
+top_left_lon,top_left_lat,bottom_right_lon,bottom_right_lat,area,
+103.43422,20.01078,103.58674,19.87951,Area1,[Laos]lad phu lia
+103.1208,20.574,103.2663,20.4351,Area2,[Laos]lad nam had
