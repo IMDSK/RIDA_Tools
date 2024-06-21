@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger()
 
 # Define the directory paths
-Drive = "D:\\RIDA\\Sentinel_Process"
+Drive = "D:\RIDA-Docker\work\sentinel_process"
 Image_Finish = os.path.join(Drive, "Image_Finish")
 Image_Missing = os.path.join(Drive, "Image_Missing")
 Output = os.path.join(Drive, "Output")
@@ -35,8 +35,8 @@ Image = os.path.join(Drive, "Image")
 # SHP Creation
 def execute_script(csv_filename, base_path):
     df = pd.read_csv(csv_filename)
-    transformer = Transformer.from_crs("epsg:4326", "epsg:32647", always_xy=True)
-    # transformer = Transformer.from_crs("epsg:4326", "epsg:32648", always_xy=True)
+    # transformer = Transformer.from_crs("epsg:4326", "epsg:32647", always_xy=True)
+    transformer = Transformer.from_crs("epsg:4326", "epsg:32648", always_xy=True)
     schema = {
         'geometry': 'Polygon',
         'properties': {'id': 'int', 'area': 'str'}
@@ -316,7 +316,7 @@ def aoi_submit_folder_rndi_test(selected_folder, config):
 
     # Step 6: Execute SentinelProcess script
     try:
-        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Train_rNDI.py"
+        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Train_rNDI.py"
         subprocess.run(["python", script_path])
         output_messages.append("SentinelProcess script executed.")
     except Exception as e:
@@ -372,7 +372,7 @@ def aoi_submit_folder_dnbr_test(selected_folder, config):
 
     # Step 6: Execute SentinelProcess script
     try:
-        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Train_dNBR.py"
+        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Train_dNBR.py"
         subprocess.run(["python", script_path])
         output_messages.append("SentinelProcess script executed.")
     except Exception as e:
@@ -429,7 +429,7 @@ def aoi_submit_folder_predict_test(selected_folder):
 
     # Step 6: Execute SentinelProcess script
     try:
-        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Predict.py"
+        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Predict.py"
         subprocess.run(["python", script_path])
         output_messages.append("SentinelProcess script executed.")
     except Exception as e:
@@ -442,160 +442,3 @@ def aoi_submit_folder_predict_test(selected_folder):
     return "\n".join(output_messages)
 
 
-
-
-# def parallel_resample(input_folder, output_folder, new_resolution):
-#     input_rasters = [os.path.join(input_folder, f) for f in os.listdir(input_folder) if f.endswith(('_20m.jp2', '_60m.jp2'))]
-#     os.makedirs(output_folder, exist_ok=True)
-#     with ThreadPoolExecutor(max_workers=4) as executor:
-#         futures = [
-#             executor.submit(
-#                 resample_raster,
-#                 input_raster,
-#                 os.path.join(output_folder, os.path.basename(input_raster)),
-#                 new_resolution
-#             ) for input_raster in input_rasters
-#         ]
-#         for future in futures:
-#             future.result()
-    
-#     # Copy non-resampled files
-#     non_resampled_files = [f for f in os.listdir(input_folder) if not f.endswith(('_20m.jp2', '_60m.jp2'))]
-#     for file in non_resampled_files:
-#         shutil.copy(os.path.join(input_folder, file), os.path.join(output_folder, file))
-
-# # Main function to run the entire process
-# def aoi_submit_folder_dnbr(selected_folder, config):
-#     output_messages = []
-
-#     # Step 1: SHP Creation
-#     csv_file = os.path.join(selected_folder, "Coordinate.csv")
-#     execute_script(csv_file, selected_folder)
-#     output_messages.append("SHP files created.")
-
-#     # Step 2: Resampling
-#     before_folder = os.path.join(selected_folder, "Before")
-#     after_folder = os.path.join(selected_folder, "After")
-#     resampled_before_folder = os.path.join(selected_folder, "Resampled_Before")
-#     resampled_after_folder = os.path.join(selected_folder, "Resampled_After")
-#     parallel_resample(before_folder, resampled_before_folder, new_resolution=10)
-#     parallel_resample(after_folder, resampled_after_folder, new_resolution=10)
-
-#     # Step 3: File Checker
-#     response, existing_before, existing_after = process_files(selected_folder, config)
-#     output_messages.append(f"Data processed for folder: {selected_folder}")
-#     output_messages.append(response)
-
-#     # Step 4: Cropping
-#     shp_path = os.path.join(selected_folder, "SHP")
-#     if existing_before:
-#         crop_and_show_images(selected_folder, shp_path, resampled_before_folder, 'Before_Cropped')
-#         output_messages.append("Before images cropped and shown.")
-#     if existing_after:
-#         crop_and_show_images(selected_folder, shp_path, resampled_after_folder, 'After_Cropped')
-#         output_messages.append("After images cropped and shown.")
-
-#     # Step 5: Move Folders
-#     move_folders(selected_folder)
-#     output_messages.append("Folders moved.")
-
-#     # Step 6: Execute SentinelProcess script
-#     script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Train_dNBR.py"
-#     subprocess.run(["python", script_path])
-#     output_messages.append("SentinelProcess script executed.")
-
-#     logger.info("Training AOI process completed.")
-#     output_messages.append("Training AOI process completed.")
-
-#     return "\n".join(output_messages)
-
-# # Main function to run the entire process
-# def aoi_submit_folder_rndi(selected_folder, config):
-#     output_messages = []
-
-#     # Step 1: SHP Creation
-#     csv_file = os.path.join(selected_folder, "Coordinate.csv")
-#     execute_script(csv_file, selected_folder)
-#     output_messages.append("SHP files created.")
-
-#     # Step 2: Resampling
-#     before_folder = os.path.join(selected_folder, "Before")
-#     after_folder = os.path.join(selected_folder, "After")
-#     resampled_before_folder = os.path.join(selected_folder, "Resampled_Before")
-#     resampled_after_folder = os.path.join(selected_folder, "Resampled_After")
-#     parallel_resample(before_folder, resampled_before_folder, new_resolution=10)
-#     parallel_resample(after_folder, resampled_after_folder, new_resolution=10)
-
-#     # Step 3: File Checker
-#     response, existing_before, existing_after = process_files(selected_folder, config)
-#     output_messages.append(f"Data processed for folder: {selected_folder}")
-#     output_messages.append(response)
-
-#     # Step 4: Cropping
-#     shp_path = os.path.join(selected_folder, "SHP")
-#     if existing_before:
-#         crop_and_show_images(selected_folder, shp_path, resampled_before_folder, 'Before_Cropped')
-#         output_messages.append("Before images cropped and shown.")
-#     if existing_after:
-#         crop_and_show_images(selected_folder, shp_path, resampled_after_folder, 'After_Cropped')
-#         output_messages.append("After images cropped and shown.")
-
-#     # Step 5: Move Folders
-#     move_folders(selected_folder)
-#     output_messages.append("Folders moved.")
-
-#     # Step 6: Execute SentinelProcess script
-#     script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Train_rNDI.py"
-#     subprocess.run(["python", script_path])
-#     output_messages.append("SentinelProcess script executed.")
-
-#     logger.info("Training AOI process completed.")
-#     output_messages.append("Training AOI process completed.")
-
-#     return "\n".join(output_messages)
-
-
-# # Main function to run the entire process
-# def aoi_submit_folder_predict(selected_folder):
-#     output_messages = []
-
-#     # Step 1: SHP Creation
-#     csv_file = os.path.join(selected_folder, "Coordinate.csv")
-#     execute_script(csv_file, selected_folder)
-#     output_messages.append("SHP files created.")
-
-#     # Step 2: Resampling
-#     before_folder = os.path.join(selected_folder, "Before")
-#     after_folder = os.path.join(selected_folder, "After")
-#     resampled_before_folder = os.path.join(selected_folder, "Resampled_Before")
-#     resampled_after_folder = os.path.join(selected_folder, "Resampled_After")
-#     parallel_resample(before_folder, resampled_before_folder, new_resolution=10)
-#     parallel_resample(after_folder, resampled_after_folder, new_resolution=10)
-
-#     # Step 3: File Checker
-#     response, existing_before, existing_after = process_files(selected_folder)
-#     output_messages.append(f"Data processed for folder: {selected_folder}")
-#     output_messages.append(response)
-
-#     # Step 4: Cropping
-#     shp_path = os.path.join(selected_folder, "SHP")
-#     if existing_before:
-#         crop_and_show_images(selected_folder, shp_path, resampled_before_folder, 'Before_Cropped')
-#         output_messages.append("Before images cropped and shown.")
-#     if existing_after:
-#         crop_and_show_images(selected_folder, shp_path, resampled_after_folder, 'After_Cropped')
-#         output_messages.append("After images cropped and shown.")
-
-#     # Step 5: Move Folders
-#     move_folders(selected_folder)
-#     output_messages.append("Folders moved.")
-
-#     # Step 6: Execute SentinelProcess script
-#     script_path = "/Users/imdsk/RIDA_Tools/RIDA_Tools/SentinelProcess_Predict.py"
-#     subprocess.run(["python", script_path])
-#     output_messages.append("SentinelProcess script executed.")
-
-#     logger.info("Training AOI process completed.")
-#     output_messages.append("Training AOI process completed.")
-
-#     return "\n".join(output_messages)

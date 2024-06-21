@@ -271,7 +271,7 @@ def submit_folder_dnbr(folder_path, output_folder_pre, output_folder_after, conf
         logger.info("Processing completed for selected folder.")
 
         # Define the path to the subprocess script
-        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Train_dNBR.py"
+        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Train_dNBR.py"
         
         # Run the script as a subprocess
         try:
@@ -289,7 +289,7 @@ def submit_folder_rndi(folder_path, output_folder_pre, output_folder_after, conf
         logger.info("Processing completed for selected folder.")
         
         # Define the path to the subprocess script
-        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Train_rNDI.py"
+        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Train_rNDI.py"
     
         # Run the script as a subprocess
         try:
@@ -307,7 +307,7 @@ def submit_folder_predict(folder_path, output_folder_after):
         logger.info("Processing completed for selected folder.")
         
         # Define the path to the subprocess script
-        script_path = "D:\\RIDA\\RIDA_Tools\\SentinelProcess_Predict.py"
+        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Predict.py"
        
         # Run the script as a subprocess
         try:

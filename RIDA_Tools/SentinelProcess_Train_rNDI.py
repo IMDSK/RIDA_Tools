@@ -25,7 +25,7 @@ import json
 warnings.filterwarnings(action='ignore')
 
 # Load the configuration values
-with open("D:\\RIDA\\RIDA_Tools\\config_rndi.json", "r") as f:
+with open("D:\RIDA-Docker\work\data_preparation\config_rndi.json", "r") as f:
     config = json.load(f)
 
 # Extracting configuration values
@@ -38,7 +38,7 @@ Error_Limit = 1
 mode = True
 
 # Define paths with double backslashes
-Drive = "D:\\RIDA\\Sentinel_Process"
+Drive = "D:\RIDA-Docker\work\sentinel_process"
 Image = os.path.join(Drive, "Image")
 Image_Pre = os.path.join(Drive, "Image_Pre")
 Image_Finish = os.path.join(Drive, "Image_Finish")
