@@ -85,17 +85,17 @@ burn_con_lv4_threshold_rndi = widgets.IntText(
 )
 
 # Folder chooser and process button
-fc = FileChooser("../resource")
+fc = FileChooser("resource")
 submit_button = Button(description="Submit")
 folder_label = Label("")
 
 # Input widgets for output folders
 output_folder_input_pre = widgets.Text(
-    value='D:\RIDA-Docker\work\sentinel_process\Image_pre',
+    value='sentinel_process\Image_pre',
     description='Output Folder Pre:',
 )
 output_folder_input_after = widgets.Text(
-    value='D:\RIDA-Docker\work\sentinel_process\Image',
+    value='sentinel_process\Image',
     description='Output Folder After:',
 )
 
@@ -112,8 +112,8 @@ def plot_burn_con_image(pipeline_type='Train'):
             print("No image plotting required for the Predict pipeline.")
             return None
 
-        burn_con_dir = r'D:\RIDA-Docker\work\sentinel_process\Raster_BurnCon'
-        shp_dir = r'D:\RIDA-Docker\work\sentinel_process\Raster_BurnShape'
+        burn_con_dir = r'sentinel_process\Raster_BurnCon'
+        shp_dir = r'sentinel_process\Raster_BurnShape'
         area_dirs = [d for d in os.listdir(burn_con_dir) if os.path.isdir(os.path.join(burn_con_dir, d))]
 
         if not area_dirs:
@@ -140,6 +140,8 @@ def plot_burn_con_image(pipeline_type='Train'):
                 true_color_image = np.dstack((band4, band3, band2))
                 true_color_normalized = true_color_image / true_color_image.max()
 
+                gdf = gdf.apply(lambda row: row.geometry.hpr_flip(), axis=1)
+                
                 # Create side by side plots
                 fig, axes = plt.subplots(1, 2, figsize=(16, 8), dpi=100)
 
@@ -215,52 +217,52 @@ def on_submit_clicked(b):
 def on_adjust_clicked(b):
     # Clear all processed files and prompt to select Resource folder again
     try:
-        shutil.rmtree('.\\prepare_image')
+        shutil.rmtree('prepare_image')
     except FileNotFoundError:
         pass  # Skip if the directory does not exist
 
     try:
-        shutil.rmtree('.\\rename_image')
+        shutil.rmtree('rename_image')
     except FileNotFoundError:
         pass
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\SHP')
+        shutil.rmtree(r'resource\T47QNB\2023\SHP')
     except FileNotFoundError:
         pass  # Skip if the directory does not exist
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\Before_Cropped')
+        shutil.rmtree(r'resource\T47QNB\2023\Before_Cropped')
     except FileNotFoundError:
         pass  # Skip if the directory does not exist
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\After_Cropped')
+        shutil.rmtree(r'resource\T47QNB\2023\After_Cropped')
     except FileNotFoundError:
         pass
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\Resampled_After')
+        shutil.rmtree(r'resource\T47QNB\2023\Resampled_After')
     except FileNotFoundError:
         pass
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\Resampled_Before')
+        shutil.rmtree(r'resource\T47QNB\2023\Resampled_Before')
     except FileNotFoundError:
         pass
 
 
 
-    shutil.rmtree(r'D:\RIDA-Docker\work\sentinel_process')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Image')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Image_Finish')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Image_Missing')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Image_pre')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Output')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Raster_BurnCon')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Raster_BurnShape')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Raster_BurnLevel')
+    shutil.rmtree(r'sentinel_process')
+    os.makedirs(r'sentinel_process')
+    os.makedirs(r'sentinel_process\Image')
+    os.makedirs(r'sentinel_process\Image_Finish')
+    os.makedirs(r'sentinel_process\Image_Missing')
+    os.makedirs(r'sentinel_process\Image_pre')
+    os.makedirs(r'sentinel_process\Output')
+    os.makedirs(r'sentinel_process\Raster_BurnCon')
+    os.makedirs(r'sentinel_process\Raster_BurnShape')
+    os.makedirs(r'sentinel_process\Raster_BurnLevel')
     
     with output_widget:
         clear_output()
@@ -269,8 +271,8 @@ def on_adjust_clicked(b):
 
 
 def on_save_clicked(b):
-    src_folder = 'D:\RIDA-Docker\work\sentinel_process\Raster_BurnCon'
-    dest_base_folder = 'D:\RIDA-Docker\work\dataframe'
+    src_folder = 'sentinel_process\Raster_BurnCon'
+    dest_base_folder = 'dataframe'
 
     if not os.path.exists(dest_base_folder):
         os.makedirs(dest_base_folder)
@@ -314,65 +316,65 @@ def on_save_clicked(b):
 
     # Now that all files are copied, you can safely clean up
     try:
-        shutil.rmtree('.\\prepare_image')
-        print(f"Removed directory: .\\prepare_image")
+        shutil.rmtree('prepare_image')
+        print(f"Removed directory: prepare_image")
     except FileNotFoundError:
         pass  # Skip if the directory does not exist
 
     try:
-        shutil.rmtree('.\\rename_image')
-        print(f"Removed directory: .\\rename_image")
+        shutil.rmtree('rename_image')
+        print(f"Removed directory: rename_image")
     except FileNotFoundError:
         pass
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\SHP')
-        print(f"Removed directory:D:\RIDA-Docker\work\resource\T47QNB\2023\SHP")
+        shutil.rmtree(r'resource\T47QNB\2023\SHP')
+        print(f"Removed directory: resource\T47QNB\2023\SHP")
     except FileNotFoundError:
         pass  # Skip if the directory does not exist
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\Before_Cropped')
-        print(f"Removed directory: D:\RIDA-Docker\work\resource\T47QNB\2023\Before_Cropped")
+        shutil.rmtree(r'T47QNB\2023\Before_Cropped')
+        print(f"Removed directory: resource\T47QNB\2023\Before_Cropped")
     except FileNotFoundError:
         pass  # Skip if the directory does not exist
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\After_Cropped')
-        print(f"Removed directory: D:\RIDA-Docker\work\resource\T47QNB\2023\After_Cropped")
+        shutil.rmtree(r'T47QNB\2023\After_Cropped')
+        print(f"Removed directory: resource\T47QNB\2023\After_Cropped")
     except FileNotFoundError:
         pass
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\Resampled_After')
-        print(f"Removed directory: D:\RIDA-Docker\work\resource\T47QNB\2023\Resampled_After")
+        shutil.rmtree(r'T47QNB\2023\Resampled_After')
+        print(f"Removed directory: resource\T47QNB\2023\Resampled_After")
     except FileNotFoundError:
         pass
 
     try:
-        shutil.rmtree(r'D:\RIDA-Docker\work\resource\T47QNB\2023\Resampled_Before')
-        print(f"Removed directory: D:\RIDA-Docker\work\resource\T47QNB\2023\Resampled_Before")
+        shutil.rmtree(r'T47QNB\2023\Resampled_Before')
+        print(f"Removed directory: resource\T47QNB\2023\Resampled_Before")
     except FileNotFoundError:
         pass
 
-    shutil.rmtree(r'D:\RIDA-Docker\work\sentinel_process')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process')
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Image')
-    print(f"Created directory: D:\RIDA-Docker\work\sentinel_process\Image")
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Image_Finish')
-    print(f"Created directory: D:\RIDA-Docker\work\sentinel_process\Image_Finish")
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Image_Missing')
-    print(f"Created directory: D:\RIDA-Docker\work\sentinel_process\Image_Missing")
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Image_pre')
-    print(f"Created directory: D:\RIDA-Docker\work\sentinel_process\Image_pre")
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Output')
-    print(f"Created directory: D:\RIDA-Docker\work\sentinel_process\Output")
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Raster_BurnCon')
-    print(f"Created directory: D:\RIDA-Docker\work\sentinel_process\Raster_BurnCon")
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Raster_BurnShape')
-    print(f"Created directory: D:\RIDA-Docker\work\sentinel_process\Raster_BurnShape")
-    os.makedirs(r'D:\RIDA-Docker\work\sentinel_process\Raster_BurnLevel')
-    print(f"Created directory: D:\RIDA-Docker\work\sentinel_process\Raster_BurnLevel")
+    shutil.rmtree(r'sentinel_process')
+    os.makedirs(r'sentinel_process')
+    os.makedirs(r'sentinel_process\Image')
+    print(f"Created directory: sentinel_process\Image")
+    os.makedirs(r'sentinel_process\Image_Finish')
+    print(f"Created directory:sentinel_process\Image_Finish")
+    os.makedirs(r'sentinel_process\Image_Missing')
+    print(f"Created directory: sentinel_process\Image_Missing")
+    os.makedirs(r'sentinel_process\Image_pre')
+    print(f"Created directory: sentinel_process\Image_pre")
+    os.makedirs(r'sentinel_process\Output')
+    print(f"Created directory: sentinel_process\Output")
+    os.makedirs(r'sentinel_process\Raster_BurnCon')
+    print(f"Created directory: sentinel_process\Raster_BurnCon")
+    os.makedirs(r'sentinel_process\Raster_BurnShape')
+    print(f"Created directory: sentinel_process\Raster_BurnShape")
+    os.makedirs(r'sentinel_process\Raster_BurnLevel')
+    print(f"Created directory: sentinel_process\Raster_BurnLevel")
 
     with output_widget:
         clear_output()

@@ -1,5 +1,3 @@
-# SentinelProcess_Train_rNDI.py
-
 import os
 import shutil
 import time
@@ -25,7 +23,7 @@ import json
 warnings.filterwarnings(action='ignore')
 
 # Load the configuration values
-with open("D:\RIDA-Docker\work\data_preparation\config_rndi.json", "r") as f:
+with open("config_rndi.json", "r") as f:
     config = json.load(f)
 
 # Extracting configuration values
@@ -38,7 +36,7 @@ Error_Limit = 1
 mode = True
 
 # Define paths with double backslashes
-Drive = "D:\RIDA-Docker\work\sentinel_process"
+Drive = "sentinel_process"
 Image = os.path.join(Drive, "Image")
 Image_Pre = os.path.join(Drive, "Image_Pre")
 Image_Finish = os.path.join(Drive, "Image_Finish")
@@ -49,18 +47,20 @@ Rtbreg = os.path.join(Drive, "Raster_BurnReg")
 RtbShape = os.path.join(Drive, "Raster_BurnShape")
 RtbLevel = os.path.join(Drive, "Raster_BurnLevel")
 
-Track_arr = [
-    "Area1\\", "Area2\\", "Area3\\", "Area4\\", "Area5\\", "Area6\\", "Area7\\", "Area8\\", "Area9\\", "Area10\\", "Area11\\", "Area12\\",
-    "Area00\\", "Area01\\", "Area02\\", "Area03\\", "Area04\\", "Area05\\", "Area06\\", "Area07\\", "Area08\\", "Area09\\",
-    "Area10\\", "Area11\\", "Area12\\", "Area13\\", "Area14\\", "Area15\\", "Area16\\", "Area17\\", "Area18\\", "Area19\\",
-    "Area20\\", "Area21\\", "Area22\\", "Area23\\", "Area24\\", "Area25\\", "Area26\\", "Area27\\", "Area28\\", "Area29\\",
-    "Area30\\", "Area31\\", "Area32\\", "Area33\\", "Area34\\", "Area35\\", "Area36\\", "Area37\\", "Area38\\", "Area39\\",
-    "Area40\\", "Area41\\", "Area42\\", "Area43\\", "Area44\\", "Area45\\", "Area46\\", "Area47\\", "Area48\\", "Area49\\",
-    "Area50\\", "Area51\\", "Area52\\", "Area53\\", "Area54\\", "Area55\\", "Area56\\", "Area57\\", "Area58\\", "Area59\\",
-    "Area60\\", "Area61\\", "Area62\\", "Area63\\", "Area64\\", "Area65\\", "Area66\\", "Area67\\", "Area68\\", "Area69\\",
-    "Area70\\", "Area71\\", "Area72\\", "Area73\\", "Area74\\", "Area75\\", "Area76\\", "Area77\\", "Area78\\", "Area79\\",
-    "Area80\\", "Area81\\", "Area82\\", "Area83\\", "Area84\\", "Area85\\"
-]
+# Track_arr = [
+#     "Area1\\", "Area2\\", "Area3\\", "Area4\\", "Area5\\", "Area6\\", "Area7\\", "Area8\\", "Area9\\", "Area10\\", "Area11\\", "Area12\\",
+#     "Area00\\", "Area01\\", "Area02\\", "Area03\\", "Area04\\", "Area05\\", "Area06\\", "Area07\\", "Area08\\", "Area09\\",
+#     "Area10\\", "Area11\\", "Area12\\", "Area13\\", "Area14\\", "Area15\\", "Area16\\", "Area17\\", "Area18\\", "Area19\\",
+#     "Area20\\", "Area21\\", "Area22\\", "Area23\\", "Area24\\", "Area25\\", "Area26\\", "Area27\\", "Area28\\", "Area29\\",
+#     "Area30\\", "Area31\\", "Area32\\", "Area33\\", "Area34\\", "Area35\\", "Area36\\", "Area37\\", "Area38\\", "Area39\\",
+#     "Area40\\", "Area41\\", "Area42\\", "Area43\\", "Area44\\", "Area45\\", "Area46\\", "Area47\\", "Area48\\", "Area49\\",
+#     "Area50\\", "Area51\\", "Area52\\", "Area53\\", "Area54\\", "Area55\\", "Area56\\", "Area57\\", "Area58\\", "Area59\\",
+#     "Area60\\", "Area61\\", "Area62\\", "Area63\\", "Area64\\", "Area65\\", "Area66\\", "Area67\\", "Area68\\", "Area69\\",
+#     "Area70\\", "Area71\\", "Area72\\", "Area73\\", "Area74\\", "Area75\\", "Area76\\", "Area77\\", "Area78\\", "Area79\\",
+#     "Area80\\", "Area81\\", "Area82\\", "Area83\\", "Area84\\", "Area85\\"
+# ]
+
+Track_arr = ["T47QME\\"]
 
 def loadCooldown():
     global mode
@@ -444,9 +444,6 @@ def Raster_Process(Track):
 
                 # Read the shapefile
                 gdf = gpd.read_file(shapefile_path)
-
-                # Flip the shapefile horizontally
-                gdf = gdf.apply(lambda row: row.geometry.hpr_flip(), axis=1)
 
                 # # Rotate the shapefile clockwise by 180 degrees
                 # gdf = gdf.rotate(90, origin='centroid')

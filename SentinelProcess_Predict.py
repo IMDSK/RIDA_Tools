@@ -26,7 +26,7 @@ Error_Limit = 1
 mode = True
 
 # Define paths with double backslashes
-Drive = "D:\\RIDA\\Sentinel_Process"
+Drive = "sentinel_process"
 Image = os.path.join(Drive, "Image")
 Image_Pre = os.path.join(Drive, "Image_Pre")
 Image_Finish = os.path.join(Drive, "Image_Finish")
@@ -206,7 +206,7 @@ def Raster_Process(Track):
                     src_AFB08,
                     src_AFB8A10,
                     src_AFB0910,
-                    src_AFB1210
+                    src_AFB1210,
                 ]
 
                 # List to hold the bands data and metadata
@@ -216,6 +216,7 @@ def Raster_Process(Track):
                 # Reading the bands without resampling
                 for path in band_paths:
                     with rasterio.open(path) as src:
+                    
                         data = src.read(1)
                         transform = src.transform
                         
@@ -252,96 +253,96 @@ def Raster_Process(Track):
 
                 print(print_time()+"  DataFrame Process ")
 
-                # with rasterio.open(AFB08) as src:
-                #     bounds = src.bounds
-                #     width, height = src.width, src.height
-                #     crs = src.crs
+                with rasterio.open(AFB08) as src:
+                    bounds = src.bounds
+                    width, height = src.width, src.height
+                    crs = src.crs
 
-                #     lats = np.linspace(bounds.top, bounds.bottom, height)
-                #     longs = np.linspace(bounds.left, bounds.right, width)
-                #     lon_grid, lat_grid = np.meshgrid(longs, lats)
-                #     lat_list = lat_grid.ravel()
-                #     lon_list = lon_grid.ravel()
+                    lats = np.linspace(bounds.top, bounds.bottom, height)
+                    longs = np.linspace(bounds.left, bounds.right, width)
+                    lon_grid, lat_grid = np.meshgrid(longs, lats)
+                    lat_list = lat_grid.ravel()
+                    lon_list = lon_grid.ravel()
 
-                #     lat_wgs84, lon_wgs84 = transform(crs, 'EPSG:4326', lon_list, lat_list)
+                    lat_wgs84, lon_wgs84 = transform(crs, 'EPSG:4326', lon_list, lat_list)
                     
-                #     band_3_data = data_AFB03.ravel()
-                #     band_4_data = data_AFB04.ravel()
-                #     band_5_data = data_AFB0510.ravel()
-                #     band_6_data = data_AFB0610.ravel()
-                #     band_7_data = data_AFB0710.ravel()
-                #     band_8_data = data_AFB08.ravel()
-                #     band_8A_data = data_AFB8A10.ravel()
-                #     band_9_data = data_AFB0910.ravel()
-                #     band_12_data = data_AFB1210.ravel()
+                    band_3_data = data_AFB03.ravel()
+                    band_4_data = data_AFB04.ravel()
+                    band_5_data = data_AFB0510.ravel()
+                    band_6_data = data_AFB0610.ravel()
+                    band_7_data = data_AFB0710.ravel()
+                    band_8_data = data_AFB08.ravel()
+                    band_8A_data = data_AFB8A10.ravel()
+                    band_9_data = data_AFB0910.ravel()
+                    band_12_data = data_AFB1210.ravel()
 
-                #     df = pd.DataFrame({
-                #             'Tile': tile,
-                #             'Date': date,
-                #             'Latitude_WGS84': lon_wgs84, # Lat and lng wgs84 is flip verticle map so i need to swap value 
-                #             'Longitude_WGS84': lat_wgs84,
-                #             'Band_3_Post': band_3_data,
-                #             'Band_4_Post': band_4_data,
-                #             'Band_5_Post': band_5_data,
-                #             'Band_6_Post': band_6_data,
-                #             'Band_7_Post': band_7_data,
-                #             'Band_8_Post': band_8_data,
-                #             'Band_8A_Post': band_8A_data,
-                #             'Band_9_Post': band_9_data,
-                #             'Band_12_Post': band_12_data,
-                #         })
+                    df = pd.DataFrame({
+                            'Tile': tile,
+                            'Date': date,
+                            'Latitude_WGS84': lon_wgs84, # Lat and lng wgs84 is flip verticle map so i need to swap value 
+                            'Longitude_WGS84': lat_wgs84,
+                            'Band_3_Post': band_3_data,
+                            'Band_4_Post': band_4_data,
+                            'Band_5_Post': band_5_data,
+                            'Band_6_Post': band_6_data,
+                            'Band_7_Post': band_7_data,
+                            'Band_8_Post': band_8_data,
+                            'Band_8A_Post': band_8A_data,
+                            'Band_9_Post': band_9_data,
+                            'Band_12_Post': band_12_data,
+                        })
 
-                #     df.fillna(0, inplace=True)
+                    df.fillna(0, inplace=True)
 
-                #     output_filename = f"{Full_name[:-6]}.csv" 
-                #     output_dir = os.path.join(Rtbcon, Track)
-                #     os.makedirs(output_dir, exist_ok=True)  # Create the subdirectory if it doesn't exist
-                #     output_path = os.path.join(output_dir, output_filename)
-                #     df.to_csv(output_path, index=False)
+                    output_filename = f"{Full_name[:-6]}.csv" 
+                    output_dir = os.path.join(Rtbcon, Track)
+                    os.makedirs(output_dir, exist_ok=True)  # Create the subdirectory if it doesn't exist
+                    output_path = os.path.join(output_dir, output_filename)
+                    df.to_csv(output_path, index=False)
 
  
-                # print(print_time()+"Raster_Process :: Burn Raster Process Complate")
+                print(print_time()+"Raster_Process :: Burn Raster Process Complate")
 
 
-                # # Read true color bands
-                # with rasterio.open(AFB02) as src:
-                #     band2 = src.read(1)
-                #     profile = src.profile
+                # Read true color bands
+                with rasterio.open(AFB02) as src:
+                    band2 = src.read(1)
+                    profile = src.profile
 
-                # with rasterio.open(AFB03) as src:
-                #     band3 = src.read(1)
+                with rasterio.open(AFB03) as src:
+                    band3 = src.read(1)
 
-                # with rasterio.open(AFB04) as src:
-                #     band4 = src.read(1)
+                with rasterio.open(AFB04) as src:
+                    band4 = src.read(1)
 
-                # true_color_image = np.dstack((band4, band3, band2))
+                true_color_image = np.dstack((band4, band3, band2))
 
-                # true_color_normalized = true_color_image / true_color_image.max()
+                true_color_normalized = true_color_image / true_color_image.max()
 
-                # true_color_uint16 = (true_color_normalized * 65535).astype(np.uint16)
+                true_color_uint16 = (true_color_normalized * 65535).astype(np.uint16)
 
-                # # Define the output path for the new image
-                # output_path = os.path.join(Rtbcon, Track, f"{Mid_name[:-1]}.tif")
+                # Define the output path for the new image
+                output_path = os.path.join(Rtbcon, Track, f"{Mid_name[:-1]}.tif")
 
-                # profile.update(count=3, dtype=rasterio.uint16)
+                profile.update(count=3, dtype=rasterio.uint16)
 
-                # with rasterio.open(output_path, 'w', **profile) as dst:
-                #     dst.write(true_color_uint16[:, :, 0], 1)  # Red channel
-                #     dst.write(true_color_uint16[:, :, 1], 2)  # Green channel
-                #     dst.write(true_color_uint16[:, :, 2], 3)  # Blue channel
+                with rasterio.open(output_path, 'w', **profile) as dst:
+                    dst.write(true_color_uint16[:, :, 0], 1)  # Red channel
+                    dst.write(true_color_uint16[:, :, 1], 2)  # Green channel
+                    dst.write(true_color_uint16[:, :, 2], 3)  # Blue channel
 
-                # print(f"True color image saved to {output_path}")
+                print(f"True color image saved to {output_path}")
 
-                # # Create side by side plots
-                # fig, axes = plt.subplots(1, 2, figsize=(8, 5))
+                # Create side by side plots
+                fig, axes = plt.subplots(1, 2, figsize=(8, 5))
 
-                # # Plot true color image
-                # axes[0].imshow(true_color_normalized)
-                # axes[0].set_title('True Color Image')
-                # axes[0].axis('off')
+                # Plot true color image
+                axes[0].imshow(true_color_normalized)
+                axes[0].set_title('True Color Image')
+                axes[0].axis('off')
 
-                # plt.tight_layout()
-                # plt.show()
+                plt.tight_layout()
+                plt.show()
 
                 print(print_time()+"Raster_Process :: Raster_Process ALL Complate  \n \n")
 

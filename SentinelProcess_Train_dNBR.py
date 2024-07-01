@@ -25,7 +25,7 @@ import json
 warnings.filterwarnings(action='ignore')
 
 # Load the configuration values
-with open("D:\RIDA-Docker\work\data_preparation\config_dnbr.json", "r") as f:
+with open("config_dnbr.json", "r") as f:
     config = json.load(f)
 
 # Extracting configuration values
@@ -38,7 +38,7 @@ Error_Limit = 1
 mode = True
 
 # Define paths with double backslashes
-Drive = "D:\RIDA-Docker\work\sentinel_process"
+Drive = "sentinel_process"
 Image = os.path.join(Drive, "Image")
 Image_Pre = os.path.join(Drive, "Image_Pre")
 Image_Finish = os.path.join(Drive, "Image_Finish")
@@ -443,6 +443,9 @@ def Raster_Process(Track):
 
                 # Read the shapefile
                 gdf = gpd.read_file(shapefile_path)
+                
+                # Flip the shapefile horizontally
+                gdf = gdf.apply(lambda row: row.geometry.hpr_flip(), axis=1)
 
                 # Create side by side plots
                 fig, axes = plt.subplots(1, 2, figsize=(8, 5))

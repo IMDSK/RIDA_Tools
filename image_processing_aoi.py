@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger()
 
 # Define the directory paths
-Drive = "D:\RIDA-Docker\work\sentinel_process"
+Drive = "sentinel_process"
 Image_Finish = os.path.join(Drive, "Image_Finish")
 Image_Missing = os.path.join(Drive, "Image_Missing")
 Output = os.path.join(Drive, "Output")
@@ -35,8 +35,8 @@ Image = os.path.join(Drive, "Image")
 # SHP Creation
 def execute_script(csv_filename, base_path):
     df = pd.read_csv(csv_filename)
-    # transformer = Transformer.from_crs("epsg:4326", "epsg:32647", always_xy=True)
-    transformer = Transformer.from_crs("epsg:4326", "epsg:32648", always_xy=True)
+    transformer = Transformer.from_crs("epsg:4326", "epsg:32647", always_xy=True)
+    # transformer = Transformer.from_crs("epsg:4326", "epsg:32648", always_xy=True)
     schema = {
         'geometry': 'Polygon',
         'properties': {'id': 'int', 'area': 'str'}
@@ -101,8 +101,9 @@ def process_files(selected_folder, config=None):
 
 # Folder Mover
 def move_folders(base_path):
-    image_pre_path = os.path.join(base_path, Image_Pre)
-    image_path = os.path.join(base_path, Image)
+    sentinel_path = ""
+    image_pre_path = os.path.join(sentinel_path, Image_Pre)
+    image_path = os.path.join(sentinel_path, Image)
     if not os.path.exists(image_pre_path):
         os.makedirs(image_pre_path)
     if not os.path.exists(image_path):
@@ -316,7 +317,7 @@ def aoi_submit_folder_rndi_test(selected_folder, config):
 
     # Step 6: Execute SentinelProcess script
     try:
-        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Train_rNDI.py"
+        script_path = r"SentinelProcess_Train_rNDI.py"
         subprocess.run(["python", script_path])
         output_messages.append("SentinelProcess script executed.")
     except Exception as e:
@@ -372,7 +373,7 @@ def aoi_submit_folder_dnbr_test(selected_folder, config):
 
     # Step 6: Execute SentinelProcess script
     try:
-        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Train_dNBR.py"
+        script_path = r"SentinelProcess_Train_dNBR.py"
         subprocess.run(["python", script_path])
         output_messages.append("SentinelProcess script executed.")
     except Exception as e:
@@ -429,7 +430,7 @@ def aoi_submit_folder_predict_test(selected_folder):
 
     # Step 6: Execute SentinelProcess script
     try:
-        script_path = r"D:\RIDA-Docker\work\data_preparation\SentinelProcess_Predict.py"
+        script_path = r"SentinelProcess_Predict.py"
         subprocess.run(["python", script_path])
         output_messages.append("SentinelProcess script executed.")
     except Exception as e:
